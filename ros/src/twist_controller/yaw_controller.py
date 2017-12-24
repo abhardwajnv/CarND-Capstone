@@ -1,4 +1,5 @@
 from math import atan
+import rospy
 
 class YawController(object):
     def __init__(self, wheel_base, steer_ratio, min_speed, max_lat_accel, max_steer_angle):
@@ -16,6 +17,8 @@ class YawController(object):
         return max(self.min_angle, min(self.max_angle, angle))
 
     def get_steering(self, linear_velocity, angular_velocity, current_velocity):
+        rospy.logwarn("Calculating angle. linear_velocity_new = %s, angular_velocity_new = %s, current_velocity = %s"\
+                       %(linear_velocity, angular_velocity, current_velocity))
         angular_velocity = current_velocity * angular_velocity / linear_velocity if abs(linear_velocity) > 0. else 0.
 
         if abs(current_velocity) > 0.1:
