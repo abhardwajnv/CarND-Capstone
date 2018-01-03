@@ -17,7 +17,7 @@ class YawController(object):
         return max(self.min_angle, min(self.max_angle, angle))
 
     def get_steering(self, linear_velocity, angular_velocity, current_velocity):
-        rospy.logwarn("Calculating angle. linear_velocity_new = %s, angular_velocity_new = %s, current_velocity = %s"\
+        rospy.logdebug("Calculating angle. linear_velocity_new = %s, angular_velocity_new = %s, current_velocity = %s"\
                        %(linear_velocity, angular_velocity, current_velocity))
         angular_velocity = current_velocity * angular_velocity / linear_velocity if abs(linear_velocity) > 0. else 0.
 

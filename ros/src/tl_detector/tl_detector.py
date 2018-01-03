@@ -159,7 +159,6 @@ class TLDetector(object):
 
     def get_next_traffic_waypoint(self, car_waypoint_index):
         for key in self.stop_line_positions:
-            rospy.logwarn("key = %s"%key)
             if key > car_waypoint_index:
                 return key
         return None
@@ -173,10 +172,10 @@ class TLDetector(object):
         distance = self.distance_between_coordinates(x1,y1,x2,y2) 
         rospy.logdebug("Car at : %s,%s traffic light at : %s,%s distance = %s\n"%(x2,y2,x1,y1,distance))
         if distance > signal_observe_value:
-            rospy.logwarn("Car further than %s than next signal")
+            rospy.logwarn("Car further than %s than next signal"%signal_observe_value)
             return False
         else:
-            rospy.logwarn("Car closer than %s than next signal, need to analyze the image from camera")
+            rospy.logwarn("Car closer than %s than next signal, need to analyze the image from camera"%signal_observe_value)
             return True
 
     def process_traffic_lights(self):

@@ -96,7 +96,7 @@ class WaypointUpdater(object):
                 #rospy.logwarn("Cannot publish next waypoints, current pose or base_waypoint not available\r")
                 pass
             else:
-                rospy.logwarn("Attempting to publish final way points")
+                rospy.logdebug("Attempting to publish final way points")
                 close_way_point_index = self._get_closest_waypoint()
                 final_waypoints_message = Lane()
                 final_waypoints_message.header.seq = self.final_waypoints_seq
