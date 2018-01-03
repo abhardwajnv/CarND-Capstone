@@ -37,12 +37,12 @@ class Controller(object):
         steering = 0.0;
 
         if self.linear_velocity is None or self.linear_velocity_new is None or self.angular_velocity_new is None:
-            rospy.logwarn("either velocity is None, returning")
+            #rospy.logwarn("either velocity is None, returning")
             return 0.0,0.0,0.0
 
         if self.prev_time is None:
             self.prev_time = rospy.get_time()
-            rospy.logwarn("prev_time is none, returning")
+            #rospy.logwarn("prev_time is none, returning")
             return 0.0,0.0,0.0
 
         current_time = rospy.get_time()

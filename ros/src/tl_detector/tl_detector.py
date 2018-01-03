@@ -10,6 +10,7 @@ from light_classification.tl_classifier import TLClassifier
 import tf
 import cv2
 import yaml
+import math
 
 STATE_COUNT_THRESHOLD = 3
 
@@ -37,7 +38,7 @@ class TLDetector(object):
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
-
+        self.stop_line_positions = dict.fromkeys(list(tuple(x) for x in self.config['stop_line_positions']),None)
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
@@ -48,14 +49,25 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
-
         rospy.spin()
 
     def pose_cb(self, msg):
         self.pose = msg
 
-    def waypoints_cb(self, waypoints):
-        self.waypoints = waypoints
+    def waypoints_cb(self, msg):
+        self.base_waypoints = msg.waypoints
+        for stop_light in self.stop_line_positions:
+            try:
+                #convert stop_light x,y position into pose type
+                temp_pose = Pose()
+                temp_pose.position.x = stop_light[0]
+                temp_pose.position.y = stop_light[1]
+                index = self.get_closest_waypoint(temp_pose)
+                self.stop_line_positions[stop_light] = index
+                rospy.logwarn("Stop_light_position = %s, closest_waypoint index = %s, and data = %s"%(stop_light,index, self.base_waypoints[index]))
+            except Exception as E:
+                print (E)
+
 
     def traffic_cb(self, msg):
         self.lights = msg.lights
@@ -118,9 +130,32 @@ class TLDetector(object):
             return False
 
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
-
         #Get classification
         return self.light_classifier.get_classification(cv_image)
+
+    def distance_between(self,pose1, pose2):
+        return math.sqrt(
+                            (pose1.position.x - pose2.position.x)**2+
+                            (pose1.position.y - pose2.position.y)**2
+                            #+(wp1.pose.pose.position.z - wp2.pose.pose.position.z)**2+
+                        )
+
+    def get_closest_waypoint(self, pose):
+        current_minimum = 99999999999999999999999999999999
+        waypoint_index = -1
+        for i,waypoint in enumerate(self.base_waypoints):
+            distance = self.distance_between(waypoint.pose.pose,pose)
+            if (distance < current_minimum):
+                current_minimum = distance
+                waypoint_index = i
+        '''
+        # this was required in the way point updater, should not be required here
+	if self._way_point_behind_car(waypoint_index):
+            #rospy.logwarn("Waypoint %s behind the currept pose, picking next waypoint"%waypoint_index)
+            waypoint_index += 1
+        '''
+        #rospy.logwarn("Returning waypoint index : %s"%waypoint_index)
+        return waypoint_index
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its

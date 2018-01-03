@@ -71,7 +71,7 @@ class WaypointUpdater(object):
                            (self.base_waypoints[waypoint_index].pose.pose.position.y - self.pose.position.y) * math.sin(yaw)
                           )
 
-        rospy.logwarn("Car_reference x = %s "%x_car_reference)
+        #rospy.logwarn("Car_reference x = %s "%x_car_reference)
         return x_car_reference < 0.0;
 
     def _get_closest_waypoint(self):
@@ -83,9 +83,9 @@ class WaypointUpdater(object):
                 current_minimum = distance
                 waypoint_index = i
         if self._way_point_behind_car(waypoint_index):
-            rospy.logwarn("Waypoint %s behind the currept pose, picking next waypoint"%waypoint_index)
+            #rospy.logwarn("Waypoint %s behind the currept pose, picking next waypoint"%waypoint_index)
             waypoint_index += 1
-        rospy.logwarn("Returning waypoint index : %s"%waypoint_index)
+        #rospy.logwarn("Returning waypoint index : %s"%waypoint_index)
         return waypoint_index
 
         
@@ -93,7 +93,8 @@ class WaypointUpdater(object):
         while not rospy.is_shutdown():
             if self.base_waypoints is None or self.pose is None:
                 #rospy.logwarn("Cannot publish next waypoints, base_waypoint = %s, current_pose = %s\r"%(self.base_waypoints, self.pose))
-                rospy.logwarn("Cannot publish next waypoints, current pose or base_waypoint not available\r")
+                #rospy.logwarn("Cannot publish next waypoints, current pose or base_waypoint not available\r")
+                pass
             else:
                 rospy.logwarn("Attempting to publish final way points")
                 close_way_point_index = self._get_closest_waypoint()
