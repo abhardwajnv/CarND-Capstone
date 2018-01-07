@@ -187,6 +187,15 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
+        fp = open('SIGNAL')
+        signal = fp.readline()
+        fp.close()
+        if signal.strip() == "RED":
+            rospy.logwarn("Set state = RED")
+            state = TrafficLight.RED
+        else:
+            state = TrafficLight.GREEN
+            rospy.logwarn("Set state = GREEN")
         # List of positions that correspond to the line to stop in front of for a given intersection
         if(self.pose and self.base_waypoints):
             car_wp_index = self.get_closest_waypoint(self.pose)
@@ -194,6 +203,7 @@ class TLDetector(object):
             if self.light_is_close(light_wp_index, car_wp_index):
                 #state = self.get_light_state()
                 #return light_wp, state
+                return light_wp_index, state
                 pass
         self.waypoints = None
         return -1, TrafficLight.UNKNOWN

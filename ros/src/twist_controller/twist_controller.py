@@ -60,4 +60,5 @@ class Controller(object):
             else:
                 brake = abs(acceleration)
         steering = self.yaw_controller.get_steering(self.linear_velocity_new, self.angular_velocity_new, self.linear_velocity) 
+        brake = brake * (self.vehicle_mass + self.fuel_capacity * GAS_DENSITY) * self.wheel_radius
         return throttle, brake, steering
