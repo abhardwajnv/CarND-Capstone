@@ -84,6 +84,7 @@ class TLDetector(object):
         """
         self.has_image = True
         self.camera_image = msg
+        #self.camera_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
         light_wp, state = self.process_traffic_lights()
 
         '''
@@ -104,7 +105,7 @@ class TLDetector(object):
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
         self.state_count += 1
 
-    def get_light_state(self, light):
+    def get_light_state(self):
         """Determines the current color of the traffic light
 
         Args:
@@ -187,6 +188,7 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
+        '''
         fp = open('SIGNAL')
         signal = fp.readline()
         fp.close()
@@ -196,15 +198,14 @@ class TLDetector(object):
         else:
             state = TrafficLight.GREEN
             #rospy.logwarn("Set state = GREEN")
+        '''
         # List of positions that correspond to the line to stop in front of for a given intersection
         if(self.pose and self.base_waypoints):
             car_wp_index = self.get_closest_waypoint(self.pose)
             light_wp_index = self.get_next_traffic_waypoint(car_wp_index)
             if self.light_is_close(light_wp_index, car_wp_index):
-                #state = self.get_light_state()
-                #return light_wp, state
+                state = self.get_light_state()
                 return light_wp_index, state
-                pass
         self.waypoints = None
         return -1, TrafficLight.UNKNOWN
 
@@ -212,4 +213,4 @@ if __name__ == '__main__':
     try:
         TLDetector()
     except rospy.ROSInterruptException:
-        rospy.logerr('Could not start traffic node.')
+       rospy.logerr('Could not start traffic node.')
