@@ -23,12 +23,10 @@ class TLClassifier(object):
         label_file = model_path + '/label_map.pbtxt'
         if real:
             model = model_path + '/data/real_model/frozen_inference_graph.pb'
-        else:
-		    model = model_path + '/data/sim_model/frozen_inference_graph.pb'    
   
 
         label_map = label_map_util.load_labelmap(label_file)
-        categories = label_map_util.convert_label_map_to_categories(label_map, max_n_classes=n_classes,use_display_name=True)
+        categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes = n_classes,use_display_name=True)
         self.category_index = label_map_util.create_category_index(categories)
 
         self.image_np_deep = None
@@ -44,11 +42,11 @@ class TLClassifier(object):
 
             self.sess = tf.Session(graph=self.detection_graph, config=config)
 
-        self.scores = self.detection_graph.get_tensor_by_name('scores:0')
+        self.scores = self.detection_graph.get_tensor_by_name('detection_scores:0')
         self.image_tensor = self.detection_graph.get_tensor_by_name('image_tensor:0')
-        self.classes = self.detection_graph.get_tensor_by_name('classes:0')
-        self.bboxes = self.detection_graph.get_tensor_by_name('bboxes:0')
-        self.detections = self.detection_graph.get_tensor_by_name('detections:0')
+        self.classes = self.detection_graph.get_tensor_by_name('detection_classes:0')
+        self.bboxes = self.detection_graph.get_tensor_by_name('detection_boxes:0')
+        self.detections = self.detection_graph.get_tensor_by_name('num_detections:0')
 
 
     def get_classification(self, image):
@@ -86,5 +84,4 @@ class TLClassifier(object):
 
                 self.image_np_deep = image
 
-        if (self.traffic_light == TrafficLight.UNKNOWN):
-            tl_color = 'UNKNOWN'
+        return self.traffic_light
