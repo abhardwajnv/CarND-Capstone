@@ -22,7 +22,9 @@ class TLClassifier(object):
         model_path = os.path.dirname(os.path.realpath(__file__))
         label_file = model_path + '/label_map.pbtxt'
         if real:
-            model = model_path + '/data/real_model/frozen_inference_graph.pb'
+            pass
+        else:
+            model = model_path + '/data/sim_model/frozen_inference_graph.pb'
   
 
         label_map = label_map_util.load_labelmap(label_file)
