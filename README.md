@@ -6,7 +6,7 @@ Please use **one** of the two installation options, either native **or** docker 
 
 This repository is maintained by :
 
-* Rajeev Patil (patilrajeevs@yahoo.com)
+* Rajeev Patil (patilrajeevs@yahoo.com) - Team Lead
 * Sandip Tambde (sandip.tambde89@gmail.com)
 * Sagar Udasi (sagarudasi@hotmail.com)
 * Amit Bhardwaj (abhardwajnv@gmail.com)
