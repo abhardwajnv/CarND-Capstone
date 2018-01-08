@@ -4,6 +4,7 @@ import rospy
 from geometry_msgs.msg import PoseStamped, TwistStamped
 from styx_msgs.msg import Lane, Waypoint
 from std_msgs.msg import Int32
+from copy import deepcopy
 import math
 import tf
 '''
@@ -20,7 +21,6 @@ as well as to verify your TL classifier.
 
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
-MAX_VELOCITY = 11
 MAX_ACCELERATION = 9
 LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
 
@@ -47,7 +47,7 @@ class WaypointUpdater(object):
         self.pose = None
         self.final_waypoints_seq = 0
         self.final_waypoints_frame_id = None
-        self.rate = rospy.Rate(50)
+        self.rate = rospy.Rate(40)
         self.update_waypoints()
 
     @property
@@ -100,14 +100,9 @@ class WaypointUpdater(object):
         #rospy.logwarn("Returning waypoint index : %s"%waypoint_index)
         return waypoint_index
 
-    @property
-    def deccelration_distance(self):
-        return MAX_VELOCITY**2/(2*MAX_ACCELERATION)
-   
     def brake(self, car_waypoint_index):
-        #if self.current_velocity == 0:
-        #    return []
-        temp_waypoint = []
+        rospy.logwarn("braking")
+        temp_waypoint_list = []
         distance_to_stoppoint = self.distance_between(self.base_waypoints[car_waypoint_index].pose.pose,
                                                       self.base_waypoints[self.stop_waypoint].pose.pose)
         if distance_to_stoppoint <= 1:
@@ -116,7 +111,8 @@ class WaypointUpdater(object):
         if a > MAX_ACCELERATION:
             a = MAX_ACCELERATION
         a = a*-1
-        for way_point in self.base_waypoints[car_waypoint_index:car_waypoint_index+LOOKAHEAD_WPS]:
+        for temp_way_point in self.base_waypoints[car_waypoint_index:car_waypoint_index+LOOKAHEAD_WPS]:
+            way_point = deepcopy(temp_way_point)
             distance_to_waypoint = self.distance_between(self.base_waypoints[car_waypoint_index].pose.pose,
                                                          way_point.pose.pose)
             if distance_to_waypoint == 0:
@@ -126,39 +122,37 @@ class WaypointUpdater(object):
                 speed = math.sqrt(self.current_velocity**2 + 2*a*distance_to_waypoint)
             #rospy.logwarn("car_distance_to_waypoint = %s, speed = %s, car_distance_to_stop_point = %s"%(distance_to_waypoint, speed, distance_to_stoppoint))
             self.set_waypoint_velocity(way_point,speed)
-            temp_waypoint.append(way_point)
+            temp_waypoint_list.append(way_point)
             if distance_to_waypoint == 0:
                 break
-        return temp_waypoint
+        return temp_waypoint_list
 
     def accelerate(self,car_waypoint_index):
         #rospy.logwarn("Accelerating")
-        temp_waypoint = []
-        distance_to_stoppoint = self.distance_between(self.base_waypoints[car_waypoint_index].pose.pose,
-                                                      self.base_waypoints[self.stop_waypoint].pose.pose)
+        temp_waypoint_list = []
         for way_point in self.base_waypoints[car_waypoint_index:car_waypoint_index+LOOKAHEAD_WPS]:
-            distance_to_waypoint = self.distance_between(self.base_waypoints[car_waypoint_index].pose.pose,
-                                                         way_point.pose.pose)
-            speed = MAX_VELOCITY
-            #rospy.logwarn("car_distance_to_waypoint = %s, speed = %s, car_distance_to_stop_point = %s"%(distance_to_waypoint, speed, distance_to_stoppoint))
-            self.set_waypoint_velocity(way_point,speed)
-            temp_waypoint.append(way_point)
-        return temp_waypoint
+            temp_waypoint_list.append(way_point)
+        return temp_waypoint_list
+
+    def decceleration_distance(self, car_waypoint_index):
+        current_waypoint_velocity = self.get_waypoint_velocity(self.base_waypoints[car_waypoint_index])
+        #rospy.logwarn("Current waypoint velocity = %s"%current_waypoint_velocity)
+        return current_waypoint_velocity**2/(2*MAX_ACCELERATION)
 
     def update_waypoint_list(self, car_waypoint_index):
         OFFSET = 10
         if self.stop_waypoint != -1:
             distance_to_stop_point = self.distance_between(self.base_waypoints[car_waypoint_index].pose.pose,\
                                                            self.base_waypoints[self.stop_waypoint].pose.pose)
-            rospy.logwarn("Distance to stop point = %s, decceleration_distance = %s"%(distance_to_stop_point, self.deccelration_distance))
-            if distance_to_stop_point < self.deccelration_distance + OFFSET:
+            d = self.decceleration_distance(car_waypoint_index)
+            rospy.logwarn("Distance to stop point = %s, decceleration_distance = %s"%(distance_to_stop_point, d))
+            if distance_to_stop_point < d + OFFSET:
                 way_point_list = self.brake(car_waypoint_index)
             else:
                 way_point_list = self.accelerate(car_waypoint_index)
         else:
             #rospy.logwarn("Not Red signal")
             way_point_list = self.accelerate(car_waypoint_index)
-            #accelerate to max_velocity
         return way_point_list
 
     def update_waypoints(self):
@@ -168,7 +162,7 @@ class WaypointUpdater(object):
                 #rospy.logwarn("Cannot publish next waypoints, current pose or base_waypoint not available\r")
                 pass
             else:
-                rospy.logdebug("Attempting to publish final way points")
+                #rospy.logdebug("Attempting to publish final way points")
                 car_waypoint_index = self._get_closest_waypoint()
                 way_point_list = self.update_waypoint_list(car_waypoint_index)
 
@@ -181,7 +175,7 @@ class WaypointUpdater(object):
 
     def pose_cb(self, msg):
         # TODO: Implement
-        rospy.logdebug("Got current position")
+        #rospy.logdebug("Got current position")
         self.pose = msg.pose
         #This frame id and sequence is added to the final waypoint head, need to check if this value is what is expected
         self.final_waypoints_frame_id = msg.header.frame_id
@@ -191,8 +185,6 @@ class WaypointUpdater(object):
         # TODO: Implement
         rospy.logdebug("Got base waypoints")
         self.base_waypoints = msg.waypoints
-        for way_point in self.base_waypoints:
-            self.set_waypoint_velocity(way_point ,0)
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
