@@ -108,15 +108,22 @@ class WaypointUpdater(object):
         #if self.current_velocity == 0:
         #    return []
         temp_waypoint = []
+        distance_to_stoppoint = self.distance_between(self.base_waypoints[car_waypoint_index].pose.pose,
+                                                      self.base_waypoints[self.stop_waypoint].pose.pose)
+        if distance_to_stoppoint <= 1:
+            return []
+        a = self.current_velocity**2/(2*distance_to_stoppoint)
+        if a > MAX_ACCELERATION:
+            a = MAX_ACCELERATION
+        a = a*-1
         for way_point in self.base_waypoints[car_waypoint_index:car_waypoint_index+LOOKAHEAD_WPS]:
             distance_to_waypoint = self.distance_between(self.base_waypoints[car_waypoint_index].pose.pose,
                                                          way_point.pose.pose)
-            distance_to_stoppoint = self.distance_between(self.base_waypoints[car_waypoint_index].pose.pose,
-                                                          self.base_waypoints[self.stop_waypoint].pose.pose)
             if distance_to_waypoint == 0:
                 speed = 0
             else:
-                speed = math.sqrt(self.current_velocity**2 + 2*MAX_ACCELERATION*distance_to_waypoint*-1)
+                #speed = math.sqrt(self.current_velocity**2 + 2*MAX_ACCELERATION*distance_to_waypoint*-1)
+                speed = math.sqrt(self.current_velocity**2 + 2*a*distance_to_waypoint)
             #rospy.logwarn("car_distance_to_waypoint = %s, speed = %s, car_distance_to_stop_point = %s"%(distance_to_waypoint, speed, distance_to_stoppoint))
             self.set_waypoint_velocity(way_point,speed)
             temp_waypoint.append(way_point)
@@ -127,11 +134,11 @@ class WaypointUpdater(object):
     def accelerate(self,car_waypoint_index):
         #rospy.logwarn("Accelerating")
         temp_waypoint = []
+        distance_to_stoppoint = self.distance_between(self.base_waypoints[car_waypoint_index].pose.pose,
+                                                      self.base_waypoints[self.stop_waypoint].pose.pose)
         for way_point in self.base_waypoints[car_waypoint_index:car_waypoint_index+LOOKAHEAD_WPS]:
             distance_to_waypoint = self.distance_between(self.base_waypoints[car_waypoint_index].pose.pose,
                                                          way_point.pose.pose)
-            distance_to_stoppoint = self.distance_between(self.base_waypoints[car_waypoint_index].pose.pose,
-                                                          self.base_waypoints[self.stop_waypoint].pose.pose)
             speed = MAX_VELOCITY
             #rospy.logwarn("car_distance_to_waypoint = %s, speed = %s, car_distance_to_stop_point = %s"%(distance_to_waypoint, speed, distance_to_stoppoint))
             self.set_waypoint_velocity(way_point,speed)

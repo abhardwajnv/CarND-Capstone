@@ -172,7 +172,7 @@ class TLDetector(object):
         distance = self.distance_between_coordinates(x1,y1,x2,y2) 
         rospy.logdebug("Car at : %s,%s traffic light at : %s,%s distance = %s\n"%(x2,y2,x1,y1,distance))
         if distance > signal_observe_value:
-            rospy.logwarn("Car further than %s than next signal"%signal_observe_value)
+            #rospy.logwarn("Car further than %s than next signal"%signal_observe_value)
             return False
         else:
             rospy.logwarn("Car closer than %s than next signal, need to analyze the image from camera"%signal_observe_value)
@@ -191,11 +191,11 @@ class TLDetector(object):
         signal = fp.readline()
         fp.close()
         if signal.strip() == "RED":
-            rospy.logwarn("Set state = RED")
+            #rospy.logwarn("Set state = RED")
             state = TrafficLight.RED
         else:
             state = TrafficLight.GREEN
-            rospy.logwarn("Set state = GREEN")
+            #rospy.logwarn("Set state = GREEN")
         # List of positions that correspond to the line to stop in front of for a given intersection
         if(self.pose and self.base_waypoints):
             car_wp_index = self.get_closest_waypoint(self.pose)
